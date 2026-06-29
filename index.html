@@ -68,6 +68,163 @@
     .brand strong { display: block; font-size: 14px; }
     .brand span { display: block; color: #aeb8c7; font-size: 12px; margin-top: 3px; }
 
+
+
+    .login-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(360px, .85fr) minmax(0, 1.15fr);
+      background: #0f172a;
+      color: #f8fafc;
+    }
+
+    .login-panel {
+      display: grid;
+      align-content: center;
+      gap: 28px;
+      padding: clamp(28px, 6vw, 72px);
+      background: #111827;
+    }
+
+    .login-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .login-copy h1 {
+      margin: 0 0 12px;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.08;
+    }
+
+    .login-copy p {
+      margin: 0;
+      color: #cbd5e1;
+      font-size: 15px;
+      line-height: 1.6;
+      max-width: 520px;
+    }
+
+    .login-form {
+      display: grid;
+      gap: 14px;
+      max-width: 420px;
+    }
+
+    .login-field {
+      display: grid;
+      gap: 7px;
+    }
+
+    .login-field label {
+      color: #dbe4ef;
+      font-size: 13px;
+    }
+
+    .login-field input {
+      min-height: 46px;
+      border: 1px solid rgba(255, 255, 255, .18);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .08);
+      color: #fff;
+      padding: 11px 12px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    .login-field input:focus {
+      border-color: #5eead4;
+      box-shadow: 0 0 0 3px rgba(20, 184, 166, .18);
+    }
+
+    .login-button {
+      min-height: 46px;
+      border: 0;
+      border-radius: 8px;
+      background: #14b8a6;
+      color: #052e2b;
+      font-weight: 800;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .login-error {
+      min-height: 18px;
+      color: #fca5a5;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .login-visual {
+      position: relative;
+      display: grid;
+      align-content: end;
+      padding: clamp(28px, 5vw, 64px);
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, rgba(20, 184, 166, .16), transparent 42%),
+        linear-gradient(45deg, rgba(14, 116, 144, .24), transparent 58%),
+        #172033;
+    }
+
+    .login-visual::before {
+      content: "";
+      position: absolute;
+      inset: 12%;
+      border: 1px solid rgba(255, 255, 255, .08);
+      background-image: linear-gradient(rgba(255,255,255,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.07) 1px, transparent 1px);
+      background-size: 34px 34px;
+      transform: rotate(-4deg);
+    }
+
+    .login-stat {
+      position: relative;
+      max-width: 520px;
+      display: grid;
+      gap: 12px;
+      padding: 24px;
+      border: 1px solid rgba(255, 255, 255, .14);
+      border-radius: 8px;
+      background: rgba(15, 23, 42, .72);
+      backdrop-filter: blur(10px);
+    }
+
+    .login-stat span {
+      color: #99f6e4;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .login-stat strong {
+      font-size: clamp(24px, 4vw, 42px);
+      line-height: 1;
+    }
+
+    .app.is-locked, .login-shell.is-hidden {
+      display: none;
+    }
+
+    .logout-button {
+      width: 100%;
+      min-height: 38px;
+      border: 1px solid rgba(255, 255, 255, .16);
+      border-radius: 7px;
+      background: rgba(255, 255, 255, .06);
+      color: #e5e7eb;
+      padding: 9px 10px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    .logout-button:hover {
+      background: rgba(248, 113, 113, .16);
+      border-color: rgba(248, 113, 113, .35);
+    }
+
     .side-section { margin-top: 26px; }
 
     .kpi-note {
@@ -178,7 +335,7 @@
 
     .kpis {
       display: grid;
-      grid-template-columns: repeat(4, minmax(170px, 1fr));
+      grid-template-columns: repeat(5, minmax(160px, 1fr));
       gap: 14px;
       margin-bottom: 18px;
     }
@@ -469,6 +626,8 @@
     @media (max-width: 680px) {
       main { padding: 18px; }
       aside { grid-template-columns: 1fr; padding: 18px; }
+      .login-shell { grid-template-columns: 1fr; }
+      .login-visual { display: none; }
       header { display: grid; }
       .asof { white-space: normal; }
       .kpis { grid-template-columns: 1fr; }
@@ -482,7 +641,41 @@
   </style>
 </head>
 <body>
-  <div class="app">
+  <div class="login-shell" id="loginShell">
+    <section class="login-panel">
+      <div class="login-brand">
+        <div class="mark">CG</div>
+        <div>
+          <strong>Ceza Gelirleri</strong>
+          <span>Güvenli dashboard erişimi</span>
+        </div>
+      </div>
+      <div class="login-copy">
+        <h1>Kurumsal performans paneli</h1>
+        <p>Aylık ceza, tahsilat, belediye geliri ve operasyon performansını izlemek için oturum açın.</p>
+      </div>
+      <form class="login-form" id="loginForm" autocomplete="off">
+        <div class="login-field">
+          <label for="username">Kullanıcı adı</label>
+          <input id="username" name="username" type="text" autocomplete="username" required>
+        </div>
+        <div class="login-field">
+          <label for="password">Şifre</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+        </div>
+        <button class="login-button" type="submit">Giriş yap</button>
+        <div class="login-error" id="loginError" role="alert"></div>
+      </form>
+    </section>
+    <section class="login-visual" aria-hidden="true">
+      <div class="login-stat">
+        <span>Dashboard kapsamı</span>
+        <strong>Ceza, tahsilat ve net gelir</strong>
+        <p>Aylık eğilimler, ödeme durumu ve belediye gelir kırılımı tek ekranda.</p>
+      </div>
+    </section>
+  </div>
+  <div class="app is-locked" id="dashboardApp">
     <aside>
       <div class="brand">
         <div class="mark">CG</div>
@@ -515,6 +708,10 @@
           <div class="status-item"><span><i class="dot warn"></i>Bekleyen ay</span><strong id="unpaidMonths">0</strong></div>
         </div>
       </div>
+
+      <div class="side-section">
+        <button class="logout-button" id="logoutButton" type="button">Çıkış yap</button>
+      </div>
     </aside>
 
     <main>
@@ -543,6 +740,12 @@
           <div class="value" id="kpiNet">₺0</div>
           <div class="kpi-note" id="kpiNetNote">Şirket ve Telekom Ödemesi Sonrası</div>
           <div class="delta" id="kpiNetDelta"></div>
+        </article>
+        <article class="card">
+          <div class="label">Şirkete Ödenen Ücret</div>
+          <div class="value" id="kpiCompanyVat">₺0</div>
+          <div class="kpi-note">KDV Dahil</div>
+          <div class="delta" id="kpiCompanyVatDelta"></div>
         </article>
         <article class="card">
           <div class="label">Bekleyen Brüt Tutar</div>
@@ -734,6 +937,44 @@ Nis.26	3.430	₺11.441.396,00	₺3.432.418,80	44	₺130.991,00	₺39.297,30	₺1
       const pct = previous === 0 ? 0 : diff / Math.abs(previous);
       el.textContent = `${diff >= 0 ? "▲" : "▼"} ${formatter.format(Math.abs(diff))} (${Math.abs(pct * 100).toFixed(1)}%)`;
       el.className = `delta ${diff >= 0 ? "positive" : "negative"}`;
+    }
+
+
+
+    const AUTH_USER = "ulasim";
+    const AUTH_PASS = "ulasim";
+
+    function showDashboard() {
+      document.getElementById("loginShell").classList.add("is-hidden");
+      document.getElementById("dashboardApp").classList.remove("is-locked");
+      render();
+    }
+
+    function showLogin() {
+      document.getElementById("dashboardApp").classList.add("is-locked");
+      document.getElementById("loginShell").classList.remove("is-hidden");
+      document.getElementById("username").focus();
+    }
+
+    function setupAuth() {
+      const isLoggedIn = sessionStorage.getItem("edsDashboardAuth") === "true";
+      document.getElementById("loginForm").addEventListener("submit", event => {
+        event.preventDefault();
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value;
+        if (username === AUTH_USER && password === AUTH_PASS) {
+          sessionStorage.setItem("edsDashboardAuth", "true");
+          document.getElementById("loginError").textContent = "";
+          showDashboard();
+          return;
+        }
+        document.getElementById("loginError").textContent = "Kullanıcı adı veya şifre hatalı.";
+      });
+      document.getElementById("logoutButton").addEventListener("click", () => {
+        sessionStorage.removeItem("edsDashboardAuth");
+        showLogin();
+      });
+      if (isLoggedIn) showDashboard(); else showLogin();
     }
 
     function setupFilters() {
@@ -928,6 +1169,8 @@ Nis.26	3.430	₺11.441.396,00	₺3.432.418,80	44	₺130.991,00	₺39.297,30	₺1
       document.getElementById("kpiNet").textContent = money.format(sum(rows, "netIncome"));
       document.getElementById("kpiCount").textContent = number.format(sum(rows, "totalCount"));
       document.getElementById("kpiMunicipal").textContent = money.format(sum(rows, "municipalIncome"));
+      document.getElementById("kpiCompanyVat").textContent = money.format(sum(rows, "companyVat"));
+      document.getElementById("kpiCompanyVatDelta").textContent = `${number.format(rows.filter(r => r.companyVat > 0).length)} ay tahakkuk`;
       const unpaidGross = sum(rows.filter(r => r.status === "Ödenmedi"), "grossMunicipal");
       document.getElementById("kpiUnpaid").textContent = money.format(unpaidGross);
       setDelta("kpiNetDelta", sum(operationalRows, "netIncome"), sum(compareRows, "netIncome"));
@@ -948,8 +1191,10 @@ Nis.26	3.430	₺11.441.396,00	₺3.432.418,80	44	₺130.991,00	₺39.297,30	₺1
     }
 
     setupFilters();
-    render();
-    window.addEventListener("resize", render);
+    setupAuth();
+    window.addEventListener("resize", () => {
+      if (!document.getElementById("dashboardApp").classList.contains("is-locked")) render();
+    });
   </script>
 </body>
 </html>
