@@ -1,24 +1,25 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="tr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <title>Ceza Gelirleri Dashboard</title>
   <style>
     :root {
-      --bg: #f4f6f8;
+      --bg: #eef3f7;
       --panel: #ffffff;
-      --panel-2: #f9fafb;
-      --text: #18212f;
-      --muted: #667085;
-      --line: #d8dee8;
-      --brand: #155e75;
+      --panel-2: #f7fafc;
+      --text: #111827;
+      --muted: #64748b;
+      --line: #d9e2ec;
+      --brand: #0e7490;
       --brand-2: #0f766e;
-      --accent: #b45309;
+      --accent: #c47b21;
       --danger: #b42318;
-      --good: #067647;
-      --ink-soft: #344054;
-      --shadow: 0 10px 25px rgba(16, 24, 40, .06);
+      --good: #047857;
+      --ink-soft: #334155;
+      --shadow: 0 16px 38px rgba(15, 23, 42, .08);
     }
 
     * { box-sizing: border-box; }
@@ -27,30 +28,48 @@
       margin: 0;
       font-family: Inter, "Segoe UI", Arial, sans-serif;
       color: var(--text);
-      background: var(--bg);
+      background: linear-gradient(180deg, #f7fafc 0%, #eef3f7 42%, #e9eef4 100%);
       letter-spacing: 0;
+      min-height: 100vh;
     }
 
     .app {
       min-height: 100vh;
       display: grid;
-      grid-template-columns: 260px 1fr;
+      grid-template-columns: 284px minmax(0, 1fr);
+      transition: grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .app.sidebar-collapsed {
+      grid-template-columns: 0px minmax(0, 1fr);
     }
 
     aside {
-      background: #111827;
+      background: linear-gradient(180deg, #0f172a 0%, #111827 54%, #172033 100%);
       color: #f9fafb;
-      padding: 24px 18px;
+      padding: 22px 18px;
       position: sticky;
       top: 0;
       height: 100vh;
+      border-right: 1px solid rgba(255, 255, 255, .08);
+      box-shadow: 10px 0 30px rgba(15, 23, 42, .12);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+      width: 284px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .app.sidebar-collapsed aside {
+      transform: translateX(-284px);
+      opacity: 0;
+      pointer-events: none;
     }
 
     .brand {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 4px 4px 22px;
+      padding: 6px 4px 20px;
       border-bottom: 1px solid rgba(255, 255, 255, .12);
     }
 
@@ -63,12 +82,11 @@
       background: linear-gradient(135deg, #0e7490, #14b8a6);
       font-weight: 800;
       font-size: 18px;
+      box-shadow: 0 10px 22px rgba(20, 184, 166, .22);
     }
 
     .brand strong { display: block; font-size: 14px; }
     .brand span { display: block; color: #aeb8c7; font-size: 12px; margin-top: 3px; }
-
-
 
     .login-shell {
       min-height: 100vh;
@@ -83,7 +101,7 @@
       align-content: center;
       gap: 28px;
       padding: clamp(28px, 6vw, 72px);
-      background: #111827;
+      background: linear-gradient(180deg, rgba(17, 24, 39, .96), rgba(15, 23, 42, .98));
     }
 
     .login-brand {
@@ -142,8 +160,8 @@
       min-height: 46px;
       border: 0;
       border-radius: 8px;
-      background: #14b8a6;
-      color: #052e2b;
+      background: #2dd4bf;
+      color: #073331;
       font-weight: 800;
       font-size: 15px;
       cursor: pointer;
@@ -209,9 +227,9 @@
     .logout-button {
       width: 100%;
       min-height: 38px;
-      border: 1px solid rgba(255, 255, 255, .16);
+      border: 1px solid rgba(255, 255, 255, .11);
       border-radius: 7px;
-      background: rgba(255, 255, 255, .06);
+      background: rgba(255, 255, 255, .055);
       color: #e5e7eb;
       padding: 9px 10px;
       font: inherit;
@@ -225,7 +243,7 @@
       border-color: rgba(248, 113, 113, .35);
     }
 
-    .side-section { margin-top: 26px; }
+    .side-section { margin-top: 22px; }
 
     .kpi-note {
       color: var(--muted);
@@ -235,11 +253,11 @@
     }
 
     .side-label {
-      color: #98a2b3;
+      color: #9fb0c5;
       font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
-      margin: 0 6px 10px;
+      margin: 0 2px 10px;
     }
 
     .filter-group {
@@ -256,14 +274,20 @@
 
     select, input {
       width: 100%;
-      min-height: 38px;
-      border: 1px solid rgba(255, 255, 255, .16);
-      border-radius: 6px;
-      background: #1f2937;
+      min-height: 42px;
+      border: 1px solid rgba(255, 255, 255, .13);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .08);
       color: #fff;
       padding: 8px 10px;
       font: inherit;
       font-size: 13px;
+      outline: none;
+    }
+
+    select option {
+      background: #111827;
+      color: #fff;
     }
 
     .status-list {
@@ -279,7 +303,8 @@
       gap: 8px;
       padding: 10px;
       border-radius: 7px;
-      background: rgba(255, 255, 255, .06);
+      border: 1px solid rgba(255, 255, 255, .11);
+      background: rgba(255, 255, 255, .055);
       color: #e5e7eb;
       font-size: 13px;
     }
@@ -297,89 +322,125 @@
 
     main {
       min-width: 0;
-      padding: 28px;
+      padding: clamp(18px, 3vw, 34px);
     }
 
     header {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
+      align-items: center;
       gap: 18px;
-      margin-bottom: 22px;
+      margin-bottom: 20px;
+      padding: 18px;
+      border: 1px solid rgba(217, 226, 236, .8);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .72);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
     }
 
     h1 {
       margin: 0;
-      font-size: clamp(24px, 3vw, 34px);
+      font-size: clamp(25px, 3vw, 36px);
       line-height: 1.12;
       font-weight: 760;
     }
 
     .subtitle {
       margin: 8px 0 0;
-      color: var(--muted);
+      color: #526173;
       font-size: 14px;
-      max-width: 780px;
+      max-width: 880px;
     }
 
     .asof {
       white-space: nowrap;
-      border: 1px solid var(--line);
+      border: 1px solid #dbe4ef;
       border-radius: 8px;
-      background: var(--panel);
+      background: #f8fafc;
       padding: 11px 13px;
       color: var(--ink-soft);
       font-size: 13px;
-      box-shadow: var(--shadow);
+      font-weight: 700;
     }
 
     .kpis {
       display: grid;
-      grid-template-columns: repeat(5, minmax(160px, 1fr));
-      gap: 14px;
-      margin-bottom: 18px;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+      align-items: stretch;
+    }
+
+    .kpis .card {
+      grid-column: span 3;
+    }
+
+    .kpis .card:nth-child(1),
+    .kpis .card:nth-child(2),
+    .kpis .card:nth-child(3) {
+      grid-column: span 4;
     }
 
     .card, .chart-panel, .table-panel {
       background: var(--panel);
-      border: 1px solid var(--line);
+      border: 1px solid rgba(217, 226, 236, .95);
       border-radius: 8px;
       box-shadow: var(--shadow);
     }
 
     .card {
-      padding: 16px;
-      min-height: 124px;
-      display: grid;
-      align-content: space-between;
+      position: relative;
+      padding: 17px;
+      min-height: 142px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
       gap: 10px;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.98));
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--brand), var(--brand-2));
     }
 
     .card .label {
-      color: var(--muted);
-      font-size: 12px;
+      color: #526173;
+      font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
+      line-height: 1.25;
     }
 
     .value {
-      font-size: clamp(22px, 2.7vw, 31px);
+      font-size: clamp(21px, 2.2vw, 29px);
       line-height: 1.05;
       font-weight: 780;
-      white-space: nowrap;
+      overflow-wrap: anywhere;
+    }
+
+    .kpis .card:nth-child(n+4) .value {
+      font-size: clamp(18px, 1.7vw, 23px);
     }
 
     .delta {
       display: flex;
       align-items: center;
       gap: 6px;
-      color: var(--muted);
+      color: #64748b;
       font-size: 12px;
       min-height: 18px;
     }
 
-    .delta.positive { color: var(--good); }
-    .delta.negative { color: var(--danger); }
+    .delta.positive { color: var(--good); font-weight: 600; }
+    .delta.negative { color: var(--danger); font-weight: 600; }
 
     .grid {
       display: grid;
@@ -390,7 +451,8 @@
 
     .chart-panel {
       min-width: 0;
-      padding: 16px;
+      padding: 17px;
+      background: rgba(255, 255, 255, .92);
     }
 
     .panel-head {
@@ -398,28 +460,31 @@
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-      margin-bottom: 10px;
+      min-height: 34px;
+      margin-bottom: 14px;
     }
 
     h2 {
       margin: 0;
-      font-size: 15px;
+      color: #172033;
+      font-size: 16px;
       line-height: 1.3;
     }
 
     .hint {
-      color: var(--muted);
+      color: #64748b;
       font-size: 12px;
+      font-weight: 650;
       white-space: nowrap;
     }
 
     canvas {
       width: 100%;
-      height: 310px;
+      height: 320px;
       display: block;
     }
 
-    .small canvas { height: 225px; }
+    .small canvas { height: 245px; }
 
     .balanced-grid {
       grid-template-columns: repeat(2, minmax(360px, 1fr));
@@ -439,9 +504,9 @@
       justify-content: space-between;
       gap: 14px;
       padding: 12px;
-      background: var(--panel-2);
-      border: 1px solid #edf1f5;
+      border: 1px solid #e4ebf2;
       border-radius: 8px;
+      background: #f9fbfd;
     }
 
     .status-total strong {
@@ -477,9 +542,9 @@
       gap: 12px;
       align-items: center;
       padding: 10px 12px;
-      border: 1px solid #edf1f5;
+      border: 1px solid #e4ebf2;
       border-radius: 8px;
-      background: #fff;
+      background: #f9fbfd;
     }
 
     .status-name, .breakdown-name {
@@ -490,7 +555,7 @@
 
     .status-value, .breakdown-value {
       color: var(--text);
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 780;
       text-align: right;
       white-space: nowrap;
@@ -502,9 +567,9 @@
       gap: 12px;
       align-items: center;
       padding: 10px 12px;
-      border: 1px solid #edf1f5;
+      border: 1px solid #e4ebf2;
       border-radius: 8px;
-      background: #fff;
+      background: #f9fbfd;
     }
 
     .breakdown-track {
@@ -529,8 +594,8 @@
     .summary-box {
       padding: 11px 12px;
       border-radius: 8px;
-      border: 1px solid #edf1f5;
-      background: var(--panel-2);
+      border: 1px solid #e4ebf2;
+      background: #f9fbfd;
     }
 
     .summary-box span {
@@ -548,20 +613,23 @@
 
     .table-panel {
       overflow: hidden;
+      background: rgba(255, 255, 255, .95);
     }
 
     .table-head {
-      padding: 15px 16px;
+      padding: 16px 18px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      background: #f8fafc;
       border-bottom: 1px solid var(--line);
       gap: 12px;
     }
 
     .table-wrap {
       overflow: auto;
-      max-height: 430px;
+      max-height: 520px;
+      -webkit-overflow-scrolling: touch;
     }
 
     table {
@@ -582,15 +650,22 @@
       position: sticky;
       top: 0;
       z-index: 1;
-      background: #f8fafc;
-      color: #475467;
+      background: #f1f5f9;
+      color: #475569;
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0;
     }
 
     th:first-child, td:first-child { text-align: left; }
-    tbody tr:hover { background: #f9fbfc; }
+    tbody tr:hover { background: #f7fbff; }
+
+    tbody tr.unpaid-row {
+      background: rgba(245, 158, 11, 0.04);
+    }
+    tbody tr.unpaid-row:hover {
+      background: rgba(245, 158, 11, 0.08);
+    }
 
     tfoot td {
       position: sticky;
@@ -620,29 +695,201 @@
     .negative-money { color: var(--danger); font-weight: 700; }
     .positive-money { color: var(--good); font-weight: 700; }
 
-    @media (max-width: 1120px) {
-      .app { grid-template-columns: 1fr; }
-      aside {
-        position: static;
-        height: auto;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 18px;
-      }
-      .brand { grid-column: 1 / -1; }
-      .kpis { grid-template-columns: repeat(2, minmax(180px, 1fr)); }
-      .grid { grid-template-columns: 1fr; }
+    /* Custom Tooltip Styles */
+    .custom-tooltip {
+      position: absolute;
+      pointer-events: none;
+      opacity: 0;
+      background: rgba(15, 23, 42, 0.95);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      z-index: 100;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      transition: opacity 0.15s ease, transform 0.1s ease;
+      white-space: nowrap;
     }
 
-    @media (max-width: 680px) {
+    /* Sortable Headers */
+    .sort-header {
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+    }
+    .sort-header:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    /* Sidebar Toggle & Overlay */
+    .header-title-area {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .sidebar-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border: 1px solid #d9e2ec;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #334155;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .sidebar-toggle:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+      border-color: #cbd5e1;
+    }
+
+    .sidebar-toggle .toggle-svg {
+      display: none;
+    }
+
+    .sidebar-toggle .toggle-icon-text {
+      display: inline;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .app.sidebar-active .sidebar-overlay {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Sparkline */
+    .kpi-sparkline {
+      display: block;
+      height: 36px;
+      width: 100%;
+      pointer-events: none;
+    }
+
+    @media (max-width: 1120px) {
+      .app {
+        grid-template-columns: 1fr !important;
+      }
+      
+      aside {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 1000;
+        width: 284px;
+        height: 100vh !important;
+        transform: translateX(-284px);
+        opacity: 0;
+        pointer-events: none;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        padding: 22px 18px !important;
+        border-right: 1px solid rgba(255, 255, 255, .08) !important;
+        border-bottom: none !important;
+        box-shadow: 10px 0 30px rgba(15, 23, 42, .18) !important;
+      }
+      
+      .app.sidebar-active aside {
+        transform: translateX(0);
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .sidebar-toggle .toggle-svg {
+        display: block;
+      }
+
+      .sidebar-toggle .toggle-icon-text {
+        display: none;
+      }
+      
+      .brand {
+        display: flex !important;
+        padding: 6px 4px 20px !important;
+        border-bottom: 1px solid rgba(255, 255, 255, .12) !important;
+      }
+      
+      .side-section {
+        margin-top: 22px !important;
+        display: block !important;
+      }
+      
+      .filter-group {
+        margin-bottom: 20px !important;
+        display: grid !important;
+        gap: 10px !important;
+      }
+      
+      .filter-group label {
+        white-space: normal !important;
+      }
+      
+      select, input {
+        min-width: unset !important;
+        width: 100% !important;
+      }
+      
+      .status-list {
+        display: grid !important;
+        gap: 9px !important;
+        margin-top: 10px !important;
+      }
+      
+      .status-item {
+        padding: 10px !important;
+      }
+
+      .kpis {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      .kpis .card {
+        grid-column: span 1 !important;
+      }
+      .kpis .card:nth-child(1),
+      .kpis .card:nth-child(2),
+      .kpis .card:nth-child(3) {
+        grid-column: span 2 !important;
+      }
+      .grid { grid-template-columns: 1fr; }
+      .balanced-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 760px) {
       main { padding: 18px; }
-      aside { grid-template-columns: 1fr; padding: 18px; }
       .login-shell { grid-template-columns: 1fr; }
       .login-visual { display: none; }
-      header { display: grid; }
-      .asof { white-space: normal; }
-      .kpis { grid-template-columns: 1fr; }
-      .panel-head, .table-head { align-items: flex-start; flex-direction: column; }
+      header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 15px;
+      }
+      .asof { white-space: normal; text-align: center; }
+      .panel-head, .table-head { align-items: flex-start; flex-direction: column; gap: 8px; }
       .breakdown-row { grid-template-columns: 1fr; }
       .breakdown-value { text-align: left; }
       .breakdown-summary { grid-template-columns: 1fr; }
@@ -650,285 +897,33 @@
       .small canvas { height: 220px; }
     }
 
-    /* Modern dashboard polish */
-    :root {
-      --bg: #eef3f7;
-      --panel: #ffffff;
-      --panel-2: #f7fafc;
-      --text: #111827;
-      --muted: #64748b;
-      --line: #d9e2ec;
-      --brand: #0e7490;
-      --brand-2: #0f766e;
-      --accent: #c47b21;
-      --danger: #b42318;
-      --good: #047857;
-      --ink-soft: #334155;
-      --shadow: 0 16px 38px rgba(15, 23, 42, .08);
-    }
-
-    body {
-      background:
-        linear-gradient(180deg, #f7fafc 0%, #eef3f7 42%, #e9eef4 100%);
-      color: var(--text);
-    }
-
-    .app {
-      grid-template-columns: 284px minmax(0, 1fr);
-    }
-
-    aside {
-      padding: 22px 18px;
-      background:
-        linear-gradient(180deg, #0f172a 0%, #111827 54%, #172033 100%);
-      border-right: 1px solid rgba(255, 255, 255, .08);
-      box-shadow: 10px 0 30px rgba(15, 23, 42, .12);
-    }
-
-    .brand {
-      padding: 6px 4px 20px;
-    }
-
-    .mark {
-      box-shadow: 0 10px 22px rgba(20, 184, 166, .22);
-    }
-
-    .side-section {
-      margin-top: 22px;
-    }
-
-    .side-label {
-      margin: 0 2px 10px;
-      color: #9fb0c5;
-    }
-
-    select, input {
-      min-height: 42px;
-      border-radius: 8px;
-      background: rgba(255, 255, 255, .08);
-      border-color: rgba(255, 255, 255, .13);
-    }
-
-    .status-item, .logout-button {
-      border: 1px solid rgba(255, 255, 255, .11);
-      background: rgba(255, 255, 255, .055);
-    }
-
-    main {
-      padding: clamp(18px, 3vw, 34px);
-    }
-
-    header {
-      align-items: center;
-      margin-bottom: 20px;
-      padding: 18px;
-      border: 1px solid rgba(217, 226, 236, .8);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, .72);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-    }
-
-    h1 {
-      font-size: clamp(25px, 3vw, 36px);
-      letter-spacing: 0;
-    }
-
-    .subtitle {
-      color: #526173;
-      max-width: 880px;
-    }
-
-    .asof {
-      border-radius: 8px;
-      box-shadow: none;
-      background: #f8fafc;
-      border-color: #dbe4ef;
-      font-weight: 700;
-    }
-
-    .kpis {
-      grid-template-columns: repeat(auto-fit, minmax(205px, 1fr));
-      gap: 14px;
-      align-items: stretch;
-    }
-
-    .card, .chart-panel, .table-panel {
-      border-color: rgba(217, 226, 236, .95);
-      box-shadow: var(--shadow);
-    }
-
-    .card {
-      position: relative;
-      min-height: 142px;
-      padding: 17px;
-      overflow: hidden;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.98));
-    }
-
-    .card::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, var(--brand), var(--brand-2));
-    }
-
-    .card .label {
-      color: #526173;
-      font-size: 11px;
-      line-height: 1.25;
-    }
-
-    .value {
-      font-size: clamp(21px, 2.2vw, 29px);
-      white-space: normal;
-      overflow-wrap: anywhere;
-    }
-
-    .delta, .kpi-note {
-      color: #64748b;
-    }
-
-    .grid {
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-
-    .balanced-grid {
-      grid-template-columns: repeat(2, minmax(360px, 1fr));
-    }
-
-    .chart-panel {
-      padding: 17px;
-      background: rgba(255, 255, 255, .92);
-    }
-
-    .panel-head {
-      min-height: 34px;
-      margin-bottom: 14px;
-    }
-
-    h2 {
-      color: #172033;
-      font-size: 16px;
-    }
-
-    .hint {
-      color: #64748b;
-      font-weight: 650;
-    }
-
-    canvas {
-      height: 320px;
-    }
-
-    .small canvas {
-      height: 245px;
-    }
-
-    .status-total, .summary-box, .breakdown-row, .status-row {
-      border-color: #e4ebf2;
-      background: #f9fbfd;
-    }
-
-    .status-value, .breakdown-value {
-      font-size: 14px;
-    }
-
-    .table-panel {
-      background: rgba(255, 255, 255, .95);
-    }
-
-    .table-head {
-      padding: 16px 18px;
-      background: #f8fafc;
-    }
-
-    .table-wrap {
-      max-height: 520px;
-    }
-
-    th {
-      background: #f1f5f9;
-      color: #475569;
-    }
-
-    td {
-      color: #27364a;
-    }
-
-    tbody tr:hover {
-      background: #f7fbff;
-    }
-
-    .login-shell {
-      background: #0f172a;
-    }
-
-    .login-panel {
-      background:
-        linear-gradient(180deg, rgba(17, 24, 39, .96), rgba(15, 23, 42, .98));
-    }
-
-    .login-button {
-      background: #2dd4bf;
-      color: #073331;
-    }
-
-    @media (max-width: 1320px) {
+    @media (max-width: 580px) {
       .kpis {
-        grid-template-columns: repeat(3, minmax(205px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
       }
-    }
-
-    @media (max-width: 1120px) {
-      aside {
-        box-shadow: none;
+      .kpis .card {
+        grid-column: span 1 !important;
       }
-
-      .kpis {
-        grid-template-columns: repeat(2, minmax(205px, 1fr));
+      .kpis .card:nth-child(1),
+      .kpis .card:nth-child(2),
+      .kpis .card:nth-child(3) {
+        grid-column: span 2 !important;
       }
-
-      .balanced-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 760px) {
-      header {
-        padding: 15px;
-      }
-
-      .kpis {
-        grid-template-columns: 1fr;
-      }
-
       .card {
         min-height: 120px;
+        padding: 12px;
       }
-
       .value {
-        font-size: 24px;
+        font-size: 20px;
       }
-
       .status-row {
         grid-template-columns: 1fr;
       }
-
       .status-value {
         text-align: left;
       }
-
-      .table-wrap {
-        max-height: 460px;
-      }
     }
-
   </style>
 </head>
 <body>
@@ -1005,32 +1000,47 @@
       </div>
     </aside>
 
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <main>
       <header>
-        <div>
-          <h1>Ceza, tahsilat ve net belediye geliri</h1>
-          <p class="subtitle">Aylık ceza adetleri, brüt belediye payı, şirket maliyeti, Telekom faturası ve net gelir performansı.</p>
+        <div class="header-title-area">
+          <button class="sidebar-toggle" id="sidebarToggle" aria-label="Menüyü Gizle/Göster">
+            <svg class="toggle-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+            <span class="toggle-icon-text">◀</span>
+          </button>
+          <div>
+            <h1>Ceza, tahsilat ve net belediye geliri</h1>
+            <p class="subtitle">Aylık ceza adetleri, brüt belediye payı, şirket maliyeti, Telekom faturası ve net gelir performansı.</p>
+          </div>
         </div>
         <div class="asof" id="asOf"></div>
       </header>
 
       <section class="kpis">
         <article class="card">
+          <div class="label">Net Belediye Geliri</div>
+          <div class="value" id="kpiNet">₺0</div>
+          <div class="kpi-note" id="kpiNetNote">Şirket ve Telekom Ödemesi Sonrası</div>
+          <div class="delta" id="kpiNetDelta"></div>
+          <canvas class="kpi-sparkline" id="sparkNet" style="height: 36px; width: 100%; margin-top: 8px;"></canvas>
+        </article>
+        <article class="card">
           <div class="label">Belediye Geliri</div>
           <div class="value" id="kpiMunicipal">₺0</div>
           <div class="kpi-note" id="kpiMunicipalNote">Şirket Ödemesi Sonrası</div>
           <div class="delta" id="kpiMunicipalDelta"></div>
+          <canvas class="kpi-sparkline" id="sparkMunicipal" style="height: 36px; width: 100%; margin-top: 8px;"></canvas>
         </article>
         <article class="card">
           <div class="label">Toplam Ceza Adedi</div>
           <div class="value" id="kpiCount">0</div>
           <div class="delta" id="kpiCountDelta"></div>
-        </article>
-        <article class="card">
-          <div class="label">Net Belediye Geliri</div>
-          <div class="value" id="kpiNet">₺0</div>
-          <div class="kpi-note" id="kpiNetNote">Şirket ve Telekom Ödemesi Sonrası</div>
-          <div class="delta" id="kpiNetDelta"></div>
+          <canvas class="kpi-sparkline" id="sparkCount" style="height: 36px; width: 100%; margin-top: 8px;"></canvas>
         </article>
         <article class="card">
           <div class="label">Bekleyen Brüt Tutar</div>
@@ -1043,6 +1053,18 @@
           <div class="kpi-note">KDV Dahil · Temmuz 2024'e kadar</div>
           <div class="delta" id="kpiCompanyVatDelta"></div>
         </article>
+        <article class="card">
+          <div class="label">Tahsilat Oranı</div>
+          <div class="value" id="kpiCollectionRate">%0</div>
+          <div class="kpi-note">Ödenen / Toplam Brüt Payı</div>
+          <div class="delta" id="kpiCollectionRateDelta"></div>
+        </article>
+        <article class="card">
+          <div class="label">İptal Oranı</div>
+          <div class="value" id="kpiCancelRate">%0</div>
+          <div class="kpi-note">İptal / Toplam Ceza Adedi</div>
+          <div class="delta" id="kpiCancelRateDelta"></div>
+        </article>
       </section>
 
       <section class="grid balanced-grid">
@@ -1051,7 +1073,10 @@
             <h2>Aylık net gelir trendi</h2>
             <span class="hint">Belediye net geliri</span>
           </div>
-          <canvas id="trendChart"></canvas>
+          <div style="position: relative;">
+            <canvas id="trendChart"></canvas>
+            <div id="trendChartTooltip" class="custom-tooltip"></div>
+          </div>
         </article>
         <article class="chart-panel small">
           <div class="panel-head">
@@ -1068,7 +1093,10 @@
             <h2>Ceza adedi ve iptal oranı</h2>
             <span class="hint">Aylık operasyon</span>
           </div>
-          <canvas id="volumeChart"></canvas>
+          <div style="position: relative;">
+            <canvas id="volumeChart"></canvas>
+            <div id="volumeChartTooltip" class="custom-tooltip"></div>
+          </div>
         </article>
         <article class="chart-panel small">
           <div class="panel-head">
@@ -1078,26 +1106,52 @@
           <div id="breakdownVisual" class="breakdown-visual"></div>
         </article>
       </section>
+
+      <section class="grid">
+        <article class="chart-panel">
+          <div class="panel-head">
+            <h2>Yıllık net gelir karşılaştırması (YoY)</h2>
+            <span class="hint">Yıl bazında aylık net gelir</span>
+          </div>
+          <div style="position: relative;">
+            <canvas id="yoyChart"></canvas>
+            <div id="yoyChartTooltip" class="custom-tooltip"></div>
+          </div>
+        </article>
+      </section>
+
       <section class="table-panel">
         <div class="table-head">
-          <h2>Aylık detay</h2>
-          <span class="hint" id="rowCount"></span>
+          <div>
+            <h2>Aylık detay</h2>
+            <span class="hint" id="rowCount"></span>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button id="exportCsv" type="button" style="background: var(--brand); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; transition: background 0.2s;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Dışa Aktar (CSV)
+            </button>
+            <button id="exportExcel" type="button" style="background: #16a34a; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; transition: background 0.2s;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+              Dışa Aktar (Excel)
+            </button>
+          </div>
         </div>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Ay</th>
-                <th>Durum</th>
-                <th>Ödeme Tarihi</th>
-                <th>Ceza Adedi</th>
-                <th>İptal Adedi</th>
-                <th>Net Ceza Tutarı</th>
-                <th>Brüt Belediye Payı</th>
-                <th>Şirket KDV Dahil</th>
-                <th>Belediye Geliri</th>
-                <th>Telekom Fatura</th>
-                <th>Net Gelir</th>
+                <th class="sort-header" data-sort-key="sort">Ay</th>
+                <th class="sort-header" data-sort-key="status">Durum</th>
+                <th class="sort-header" data-sort-key="paymentDate">Ödeme Tarihi</th>
+                <th class="sort-header" data-sort-key="totalCount">Ceza Adedi</th>
+                <th class="sort-header" data-sort-key="cancelledCount">İptal Adedi</th>
+                <th class="sort-header" data-sort-key="netPenalty">Net Ceza Tutarı</th>
+                <th class="sort-header" data-sort-key="grossMunicipal">Brüt Belediye Payı</th>
+                <th class="sort-header" data-sort-key="companyVat">Şirket KDV Dahil</th>
+                <th class="sort-header" data-sort-key="municipalIncome">Belediye Geliri</th>
+                <th class="sort-header" data-sort-key="telecom">Telekom Fatura</th>
+                <th class="sort-header" data-sort-key="netIncome">Net Gelir</th>
               </tr>
             </thead>
             <tbody id="detailRows"></tbody>
@@ -1279,6 +1333,16 @@ Nis.26	3.430	₺11.441.396,00	₺3.432.418,80	44	₺130.991,00	₺39.297,30	₺1
       document.getElementById("statusFilter").addEventListener("change", render);
     }
 
+    let prevValues = {
+      netIncome: 0,
+      totalCount: 0,
+      municipalIncome: 0,
+      companyVat: 0,
+      unpaidGross: 0,
+      collectionRate: 0,
+      cancelRate: 0
+    };
+
     function drawChart(canvasId, config) {
       const canvas = document.getElementById(canvasId);
       const dpr = window.devicePixelRatio || 1;
@@ -1301,6 +1365,104 @@ Nis.26	3.430	₺11.441.396,00	₺3.432.418,80	44	₺130.991,00	₺39.297,30	₺1
         ctx.lineTo(w - pad.right, y);
       }
       ctx.stroke();
+    }
+
+    let currentSort = {
+      key: "sort",
+      asc: true
+    };
+
+    function animateValue(id, start, end, duration, formatter) {
+      const obj = document.getElementById(id);
+      if (!obj) return;
+      let startTimestamp = null;
+      const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const ease = progress * (2 - progress);
+        const currentVal = start + ease * (end - start);
+        obj.textContent = formatter.format(currentVal);
+        if (progress < 1) {
+          window.requestAnimationFrame(step);
+        } else {
+          obj.textContent = formatter.format(end);
+        }
+      };
+      window.requestAnimationFrame(step);
+    }
+
+    function animateNumber(id, start, end, duration) {
+      const obj = document.getElementById(id);
+      if (!obj) return;
+      let startTimestamp = null;
+      const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const ease = progress * (2 - progress);
+        const currentVal = start + ease * (end - start);
+        obj.textContent = number.format(Math.round(currentVal));
+        if (progress < 1) {
+          window.requestAnimationFrame(step);
+        } else {
+          obj.textContent = number.format(end);
+        }
+      };
+      window.requestAnimationFrame(step);
+    }
+
+    function animatePercentage(id, start, end, duration) {
+      const obj = document.getElementById(id);
+      if (!obj) return;
+      let startTimestamp = null;
+      const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const ease = progress * (2 - progress);
+        const currentVal = start + ease * (end - start);
+        obj.textContent = `%${currentVal.toFixed(1)}`;
+        if (progress < 1) {
+          window.requestAnimationFrame(step);
+        } else {
+          obj.textContent = `%${end.toFixed(1)}`;
+        }
+      };
+      window.requestAnimationFrame(step);
+    }
+
+    function drawSparkline(canvasId, values, color) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const w = Math.max(1, rect.width);
+      const h = Math.max(1, rect.height);
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      const ctx = canvas.getContext("2d");
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, w, h);
+      
+      if (values.length <= 1) return;
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const range = max - min || 1;
+      
+      ctx.beginPath();
+      const x = i => (w / (values.length - 1)) * i;
+      const y = val => h - 2 - ((val - min) / range) * (h - 4);
+      
+      values.forEach((v, i) => {
+        if (i === 0) ctx.moveTo(x(i), y(v));
+        else ctx.lineTo(x(i), y(v));
+      });
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      
+      ctx.lineTo(w, h);
+      ctx.lineTo(0, h);
+      ctx.fillStyle = color + "1a";
+      ctx.fill();
     }
 
     function drawLineChart(rows) {
@@ -1342,6 +1504,11 @@ Nis.26	3.430	₺11.441.396,00	₺3.432.418,80	44	₺130.991,00	₺39.297,30	₺1
             ctx.restore();
           }
         });
+
+        // Store data on canvas properties for event listener
+        const canvas = document.getElementById("trendChart");
+        canvas.chartData = rows;
+        canvas.chartScale = { pad, max, min };
       });
     }
 
@@ -1374,6 +1541,7 @@ Nis.26	3.430	₺11.441.396,00	₺3.432.418,80	44	₺130.991,00	₺39.297,30	₺1
           </div>
         </div>`;
     }
+
     function drawLegend(ctx, x, y, items, formatter = money, suffix = "") {
       ctx.font = "12px Segoe UI";
       items.forEach((item, idx) => {
@@ -1407,6 +1575,11 @@ Nis.26	3.430	₺11.441.396,00	₺3.432.418,80	44	₺130.991,00	₺39.297,30	₺1
           if (rows.length <= 13 || i % Math.ceil(rows.length / 7) === 0) ctx.fillText(r.label, pad.left + i * band, h - 16);
         });
         drawLegend(ctx, pad.left, 20, [["Ceza", "#155e75", sum(rows, "totalCount")], ["İptal", "#b45309", sum(rows, "cancelledCount")]], number, " adet");
+
+        // Store data on canvas properties for event listener
+        const canvas = document.getElementById("volumeChart");
+        canvas.chartData = rows;
+        canvas.chartScale = { pad };
       });
     }
 
@@ -1435,13 +1608,352 @@ Nis.26	3.430	₺11.441.396,00	₺3.432.418,80	44	₺130.991,00	₺39.297,30	₺1
             </div>`).join("")}
         </div>`;
     }
+
+    function drawYoYChart() {
+      drawChart("yoyChart", (ctx, w, h) => {
+        const pad = { left: 62, right: 18, top: 40, bottom: 42 };
+        const years = [2023, 2024, 2025, 2026];
+        const yearColors = {
+          2023: "#94a3b8",
+          2024: "#0e7490",
+          2025: "#0f766e",
+          2026: "#b45309"
+        };
+        
+        const yoyData = {};
+        years.forEach(yr => {
+          yoyData[yr] = Array(12).fill(null);
+        });
+        
+        data.forEach(r => {
+          if (yoyData[r.year]) {
+            yoyData[r.year][r.month] = r.netIncome;
+          }
+        });
+        
+        let min = 0;
+        let max = 1;
+        years.forEach(yr => {
+          yoyData[yr].forEach(val => {
+            if (val !== null) {
+              if (val < min) min = val;
+              if (val > max) max = val;
+            }
+          });
+        });
+        
+        chartFrame(ctx, w, h, pad);
+        
+        ctx.fillStyle = "#64748b";
+        ctx.font = "11px Inter, sans-serif";
+        for (let i = 0; i <= 4; i++) {
+          const value = max - ((max - min) / 4) * i;
+          ctx.fillText(`${(value / 1000000).toFixed(1)} mn`, 8, pad.top + ((h - pad.top - pad.bottom) / 4) * i + 4);
+        }
+        
+        const x = m => pad.left + ((w - pad.left - pad.right) / 11) * m;
+        const y = v => pad.top + (max - v) / (max - min || 1) * (h - pad.top - pad.bottom);
+        
+        years.forEach(yr => {
+          let started = false;
+          ctx.beginPath();
+          for (let m = 0; m < 12; m++) {
+            const val = yoyData[yr][m];
+            if (val !== null) {
+              const px = x(m);
+              const py = y(val);
+              if (!started) {
+                ctx.moveTo(px, py);
+                started = true;
+              } else {
+                ctx.lineTo(px, py);
+              }
+            }
+          }
+          ctx.strokeStyle = yearColors[yr];
+          ctx.lineWidth = yr === 2026 ? 3 : 1.5;
+          if (yr !== 2026) {
+            ctx.setLineDash([4, 2]);
+          } else {
+            ctx.setLineDash([]);
+          }
+          ctx.stroke();
+          
+          ctx.setLineDash([]);
+          for (let m = 0; m < 12; m++) {
+            const val = yoyData[yr][m];
+            if (val !== null) {
+              ctx.beginPath();
+              ctx.arc(x(m), y(val), yr === 2026 ? 4 : 3, 0, Math.PI * 2);
+              ctx.fillStyle = yearColors[yr];
+              ctx.fill();
+            }
+          }
+        });
+        
+        ctx.fillStyle = "#64748b";
+        monthNames.forEach((name, m) => {
+          ctx.fillText(name, x(m) - 10, h - 16);
+        });
+        
+        let lx = pad.left;
+        years.forEach(yr => {
+          ctx.fillStyle = yearColors[yr];
+          ctx.fillRect(lx, 15, 10, 10);
+          ctx.fillStyle = "#1e293b";
+          ctx.font = "bold 11px Inter, sans-serif";
+          ctx.fillText(yr.toString(), lx + 14, 24);
+          lx += 60;
+        });
+
+        // Store data on canvas properties for event listener
+        const canvas = document.getElementById("yoyChart");
+        canvas.chartData = yoyData;
+        canvas.chartScale = { pad, years, yearColors };
+      });
+    }
+
+    function exportToCsv() {
+      const rows = selectedRows();
+      const csvHeaders = ["Ay", "Durum", "Ödeme Tarihi", "Ceza Adedi", "İptal Adedi", "Net Ceza Tutarı", "Brüt Belediye Payı", "Şirket KDV Dahil", "Belediye Geliri", "Telekom Fatura", "Net Gelir"];
+      
+      const csvRows = [
+        csvHeaders.join(";"),
+        ...rows.map(r => [
+          r.label,
+          r.status,
+          r.paymentDate || "",
+          r.totalCount,
+          r.cancelledCount,
+          r.netPenalty,
+          r.grossMunicipal,
+          r.companyVat,
+          r.municipalIncome,
+          r.telecom,
+          r.netIncome
+        ].join(";"))
+      ];
+      
+      const csvContent = "\uFEFF" + csvRows.join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `EDS_Gelir_Raporu_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function exportToExcel() {
+      const rows = selectedRows();
+      const headers = ["Ay", "Durum", "Ödeme Tarihi", "Ceza Adedi", "İptal Adedi", "Net Ceza Tutarı", "Brüt Belediye Payı", "Şirket KDV Dahil", "Belediye Geliri", "Telekom Fatura", "Net Gelir"];
+      
+      const data = [
+        headers,
+        ...rows.map(r => [
+          r.label,
+          r.status,
+          r.paymentDate || "",
+          r.totalCount,
+          r.cancelledCount,
+          r.netPenalty,
+          r.grossMunicipal,
+          r.companyVat,
+          r.municipalIncome,
+          r.telecom,
+          r.netIncome
+        ])
+      ];
+      
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      
+      // Auto-fit column widths (rough estimate based on header lengths)
+      const wscols = headers.map(h => ({ wch: Math.max(h.length + 4, 12) }));
+      ws['!cols'] = wscols;
+      
+      XLSX.utils.book_append_sheet(wb, ws, "EDS Gelir Raporu");
+      XLSX.writeFile(wb, `EDS_Gelir_Raporu_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    function setupSorting() {
+      document.querySelectorAll(".sort-header").forEach(th => {
+        th.style.cursor = "pointer";
+        th.addEventListener("click", () => {
+          const key = th.getAttribute("data-sort-key");
+          if (currentSort.key === key) {
+            currentSort.asc = !currentSort.asc;
+          } else {
+            currentSort.key = key;
+            currentSort.asc = true;
+          }
+          
+          document.querySelectorAll(".sort-header").forEach(h => {
+            h.innerHTML = h.innerHTML.replace(/ [▲▼]/g, "");
+          });
+          th.innerHTML += currentSort.asc ? " ▲" : " ▼";
+          
+          render();
+        });
+      });
+      // Show default indicator
+      const defaultHeader = document.querySelector(".sort-header[data-sort-key='sort']");
+      if (defaultHeader && !defaultHeader.innerHTML.includes("▲")) {
+        defaultHeader.innerHTML += " ▲";
+      }
+    }
+
+    function setupChartEvents() {
+      // trendChart Tooltip
+      const trendCanvas = document.getElementById("trendChart");
+      const trendTooltip = document.getElementById("trendChartTooltip");
+      trendCanvas.addEventListener("mousemove", (e) => {
+        const rows = trendCanvas.chartData;
+        const scale = trendCanvas.chartScale;
+        if (!rows || !scale) return;
+        
+        const rect = trendCanvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        
+        const w = rect.width;
+        const h = rect.height;
+        const pad = scale.pad;
+        const min = scale.min;
+        const max = scale.max;
+        
+        const x = i => pad.left + ((w - pad.left - pad.right) / Math.max(rows.length - 1, 1)) * i;
+        const y = v => pad.top + (max - v) / (max - min || 1) * (h - pad.top - pad.bottom);
+        
+        let closestIdx = -1;
+        let minDistance = Infinity;
+        
+        for (let i = 0; i < rows.length; i++) {
+          const px = x(i);
+          const py = y(rows[i].netIncome);
+          const dist = Math.sqrt((mouseX - px)**2 + (mouseY - py)**2);
+          if (dist < minDistance) {
+            minDistance = dist;
+            closestIdx = i;
+          }
+        }
+        
+        if (closestIdx !== -1 && minDistance < 24) {
+          const row = rows[closestIdx];
+          trendTooltip.style.opacity = "1";
+          trendTooltip.innerHTML = `<strong>${row.label}</strong><br/>Net Gelir: <span style="color:${row.netIncome >= 0 ? '#10b981' : '#f43f5e'}; font-weight:bold;">${money.format(row.netIncome)}</span>`;
+          const tooltipRect = trendTooltip.getBoundingClientRect();
+          trendTooltip.style.left = `${Math.min(rect.width - tooltipRect.width, Math.max(0, x(closestIdx) - tooltipRect.width / 2))}px`;
+          trendTooltip.style.top = `${Math.max(10, y(row.netIncome) - tooltipRect.height - 12)}px`;
+        } else {
+          trendTooltip.style.opacity = "0";
+        }
+      });
+      trendCanvas.addEventListener("mouseleave", () => {
+        trendTooltip.style.opacity = "0";
+      });
+      
+      // volumeChart Tooltip
+      const volumeCanvas = document.getElementById("volumeChart");
+      const volumeTooltip = document.getElementById("volumeChartTooltip");
+      volumeCanvas.addEventListener("mousemove", (e) => {
+        const rows = volumeCanvas.chartData;
+        const scale = volumeCanvas.chartScale;
+        if (!rows || !scale) return;
+        
+        const rect = volumeCanvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        
+        const w = rect.width;
+        const pad = scale.pad;
+        
+        const band = (w - pad.left - pad.right) / Math.max(rows.length, 1);
+        const idx = Math.floor((mouseX - pad.left) / band);
+        
+        if (idx >= 0 && idx < rows.length) {
+          const row = rows[idx];
+          volumeTooltip.style.opacity = "1";
+          volumeTooltip.innerHTML = `<strong>${row.label}</strong><br/>Ceza: <strong>${number.format(row.totalCount)} adet</strong><br/>İptal: <strong>${number.format(row.cancelledCount)} adet</strong> (${row.totalCount > 0 ? (row.cancelledCount / row.totalCount * 100).toFixed(1) : 0}%)`;
+          const tooltipRect = volumeTooltip.getBoundingClientRect();
+          volumeTooltip.style.left = `${Math.min(rect.width - tooltipRect.width, Math.max(0, pad.left + idx * band + band / 2 - tooltipRect.width / 2))}px`;
+          volumeTooltip.style.top = `${rect.height - pad.bottom - tooltipRect.height - 10}px`;
+        } else {
+          volumeTooltip.style.opacity = "0";
+        }
+      });
+      volumeCanvas.addEventListener("mouseleave", () => {
+        volumeTooltip.style.opacity = "0";
+      });
+      
+      // yoyChart Tooltip
+      const yoyCanvas = document.getElementById("yoyChart");
+      const yoyTooltip = document.getElementById("yoyChartTooltip");
+      yoyCanvas.addEventListener("mousemove", (e) => {
+        const yoyData = yoyCanvas.chartData;
+        const scale = yoyCanvas.chartScale;
+        if (!yoyData || !scale) return;
+        
+        const rect = yoyCanvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        
+        const w = rect.width;
+        const pad = scale.pad;
+        
+        const step = (w - pad.left - pad.right) / 11;
+        const m = Math.round((mouseX - pad.left) / step);
+        
+        if (m >= 0 && m < 12) {
+          yoyTooltip.style.opacity = "1";
+          let html = `<strong>${monthNames[m]} Ayı Karşılaştırması</strong><br/>`;
+          let hasAny = false;
+          scale.years.forEach(yr => {
+            const val = yoyData[yr][m];
+            if (val !== null) {
+              hasAny = true;
+              html += `<span style="color:${scale.yearColors[yr]}">●</span> ${yr}: <strong>${money.format(val)}</strong><br/>`;
+            }
+          });
+          if (hasAny) {
+            yoyTooltip.innerHTML = html;
+            const tooltipRect = yoyTooltip.getBoundingClientRect();
+            yoyTooltip.style.left = `${Math.min(rect.width - tooltipRect.width, Math.max(0, pad.left + m * step - tooltipRect.width / 2))}px`;
+            yoyTooltip.style.top = `${pad.top + 10}px`;
+          } else {
+            yoyTooltip.style.opacity = "0";
+          }
+        } else {
+          yoyTooltip.style.opacity = "0";
+        }
+      });
+      yoyCanvas.addEventListener("mouseleave", () => {
+        yoyTooltip.style.opacity = "0";
+      });
+    }
+
     function renderTable(rows) {
       const tbody = document.getElementById("detailRows");
       const tfoot = document.getElementById("detailTotals");
-      tbody.innerHTML = rows.map(r => `
-        <tr>
+      
+      // Sort rows
+      const sortedRows = [...rows].sort((a, b) => {
+        let valA = a[currentSort.key];
+        let valB = b[currentSort.key];
+        
+        if (valA === undefined || valA === null) valA = currentSort.asc ? Infinity : -Infinity;
+        if (valB === undefined || valB === null) valB = currentSort.asc ? Infinity : -Infinity;
+        
+        if (typeof valA === "string") {
+          return currentSort.asc ? valA.localeCompare(valB, "tr") : valB.localeCompare(valA, "tr");
+        } else {
+          return currentSort.asc ? valA - valB : valB - valA;
+        }
+      });
+
+      tbody.innerHTML = sortedRows.map(r => `
+        <tr class="${r.status === 'Ödenmedi' ? 'unpaid-row' : ''}">
           <td>${r.label}</td>
-          <td><span class="pill ${r.status === "Ödendi" ? "paid" : "unpaid"}">${r.status}</span></td>
+          <td><span class="pill ${r.status === 'Ödendi' ? 'paid' : 'unpaid'}">${r.status}</span></td>
           <td>${r.paymentDate || "-"}</td>
           <td>${r.totalCount ? number.format(r.totalCount) : "-"}</td>
           <td>${r.cancelledCount ? number.format(r.cancelledCount) : "-"}</td>
@@ -1450,9 +1962,10 @@ Nis.26	3.430	₺11.441.396,00	₺3.432.418,80	44	₺130.991,00	₺39.297,30	₺1
           <td>${r.companyVat ? moneyDetail.format(r.companyVat) : "-"}</td>
           <td>${r.municipalIncome ? moneyDetail.format(r.municipalIncome) : "-"}</td>
           <td>${moneyDetail.format(r.telecom)}</td>
-          <td class="${r.netIncome < 0 ? "negative-money" : "positive-money"}">${moneyDetail.format(r.netIncome)}</td>
+          <td class="${r.netIncome < 0 ? 'negative-money' : 'positive-money'}">${moneyDetail.format(r.netIncome)}</td>
         </tr>
       `).join("");
+
       const totals = {
         totalCount: sum(rows, "totalCount"),
         cancelledCount: sum(rows, "cancelledCount"),
@@ -1463,6 +1976,7 @@ Nis.26	3.430	₺11.441.396,00	₺3.432.418,80	44	₺130.991,00	₺39.297,30	₺1
         telecom: sum(rows, "telecom"),
         netIncome: sum(rows, "netIncome")
       };
+
       tfoot.innerHTML = `
         <tr>
           <td>Toplam</td>
@@ -1475,7 +1989,7 @@ Nis.26	3.430	₺11.441.396,00	₺3.432.418,80	44	₺130.991,00	₺39.297,30	₺1
           <td>${moneyDetail.format(totals.companyVat)}</td>
           <td>${moneyDetail.format(totals.municipalIncome)}</td>
           <td>${moneyDetail.format(totals.telecom)}</td>
-          <td class="${totals.netIncome < 0 ? "negative-money" : "positive-money"}">${moneyDetail.format(totals.netIncome)}</td>
+          <td class="${totals.netIncome < 0 ? 'negative-money' : 'positive-money'}">${moneyDetail.format(totals.netIncome)}</td>
         </tr>`;
       document.getElementById("rowCount").textContent = `${rows.length} ay listeleniyor`;
     }
@@ -1484,33 +1998,106 @@ Nis.26	3.430	₺11.441.396,00	₺3.432.418,80	44	₺130.991,00	₺39.297,30	₺1
       const rows = selectedRows();
       const operationalRows = rows.filter(hasOperationalData);
       const compareRows = previousRows(operationalRows);
-      document.getElementById("kpiNet").textContent = money.format(sum(rows, "netIncome"));
-      document.getElementById("kpiCount").textContent = number.format(sum(rows, "totalCount"));
-      document.getElementById("kpiMunicipal").textContent = money.format(sum(rows, "municipalIncome"));
+      
+      const netIncomeVal = sum(rows, "netIncome");
+      const totalCountVal = sum(rows, "totalCount");
+      const municipalIncomeVal = sum(rows, "municipalIncome");
       const paidCompanyRows = rows.filter(r => r.companyVat > 0 && r.sort <= COMPANY_PAID_THROUGH_SORT);
-      document.getElementById("kpiCompanyVat").textContent = money.format(sum(paidCompanyRows, "companyVat"));
-      document.getElementById("kpiCompanyVatDelta").textContent = `${number.format(paidCompanyRows.length)} ay ödendi`;
-      const unpaidGross = sum(rows.filter(r => r.status === "Ödenmedi"), "grossMunicipal");
-      document.getElementById("kpiUnpaid").textContent = money.format(unpaidGross);
+      const companyVatVal = sum(paidCompanyRows, "companyVat");
+      const unpaidGrossVal = sum(rows.filter(r => r.status === "Ödenmedi"), "grossMunicipal");
+      
+      const totalGross = sum(rows, "grossMunicipal");
+      const paidGross = sum(rows.filter(r => r.status === "Ödendi"), "grossMunicipal");
+      const collectionRateVal = totalGross > 0 ? (paidGross / totalGross * 100) : 0;
+      
+      const totalCeza = sum(rows, "totalCount");
+      const totalIptal = sum(rows, "cancelledCount");
+      const cancelRateVal = totalCeza > 0 ? (totalIptal / totalCeza * 100) : 0;
+
+      // Animate KPIs
+      animateValue("kpiNet", prevValues.netIncome, netIncomeVal, 600, money);
+      animateNumber("kpiCount", prevValues.totalCount, totalCountVal, 600);
+      animateValue("kpiMunicipal", prevValues.municipalIncome, municipalIncomeVal, 600, money);
+      animateValue("kpiCompanyVat", prevValues.companyVat, companyVatVal, 600, money);
+      animateValue("kpiUnpaid", prevValues.unpaidGross, unpaidGrossVal, 600, money);
+      animatePercentage("kpiCollectionRate", prevValues.collectionRate, collectionRateVal, 600);
+      animatePercentage("kpiCancelRate", prevValues.cancelRate, cancelRateVal, 600);
+
       setDelta("kpiNetDelta", sum(operationalRows, "netIncome"), sum(compareRows, "netIncome"));
       setDelta("kpiCountDelta", sum(operationalRows, "totalCount"), sum(compareRows, "totalCount"), number);
+      
       document.getElementById("kpiMunicipalDelta").textContent = "";
       document.getElementById("kpiMunicipalDelta").className = "delta";
+      
       document.getElementById("kpiUnpaidDelta").textContent = `${number.format(rows.filter(r => r.status === "Ödenmedi").length)} ay bekliyor`;
-      document.getElementById("kpiUnpaidDelta").className = unpaidGross > 0 ? "delta negative" : "delta positive";
+      document.getElementById("kpiUnpaidDelta").className = unpaidGrossVal > 0 ? "delta negative" : "delta positive";
+      
+      document.getElementById("kpiCollectionRateDelta").textContent = `${rows.filter(r => r.status === "Ödendi").length} ay tahsil edildi`;
+      document.getElementById("kpiCollectionRateDelta").className = "delta positive";
+      
+      document.getElementById("kpiCancelRateDelta").textContent = `${number.format(totalIptal)} adet ceza iptal`;
+      document.getElementById("kpiCancelRateDelta").className = "delta";
+
       document.getElementById("paidMonths").textContent = rows.filter(r => r.status === "Ödendi").length;
       document.getElementById("unpaidMonths").textContent = rows.filter(r => r.status === "Ödenmedi").length;
+      
       const latest = data[data.length - 1];
       document.getElementById("asOf").textContent = `Veri dönemi: ${data[0].label} - ${latest.label}`;
+      
+      // Update prev values for next animation
+      prevValues = {
+        netIncome: netIncomeVal,
+        totalCount: totalCountVal,
+        municipalIncome: municipalIncomeVal,
+        companyVat: companyVatVal,
+        unpaidGross: unpaidGrossVal,
+        collectionRate: collectionRateVal,
+        cancelRate: cancelRateVal
+      };
+
+      // Draw sparklines (using last 12 months for visual density, or all selected rows if fewer)
+      const sparklineData = rows.slice(-12);
+      drawSparkline("sparkNet", sparklineData.map(r => r.netIncome), "#0f766e");
+      drawSparkline("sparkMunicipal", sparklineData.map(r => r.municipalIncome), "#0e7490");
+      drawSparkline("sparkCount", sparklineData.map(r => r.totalCount), "#155e75");
+
       drawLineChart(rows);
       drawStatusChart(rows);
       drawVolumeChart(operationalRows);
       drawBreakdownChart(rows);
+      drawYoYChart();
       renderTable(rows);
     }
 
     setupFilters();
     setupAuth();
+    setupSorting();
+    setupChartEvents();
+
+    // Sidebar toggle logic
+    const sidebarToggleBtn = document.getElementById("sidebarToggle");
+    const appContainer = document.getElementById("dashboardApp");
+    const sidebarOverlayEl = document.getElementById("sidebarOverlay");
+
+    sidebarToggleBtn.addEventListener("click", () => {
+      if (window.innerWidth > 1120) {
+        appContainer.classList.toggle("sidebar-collapsed");
+        const isCollapsed = appContainer.classList.contains("sidebar-collapsed");
+        sidebarToggleBtn.querySelector(".toggle-icon-text").textContent = isCollapsed ? "▶" : "◀";
+        // Trigger a resize event to redraw canvas charts with new parent container widths
+        setTimeout(() => window.dispatchEvent(new Event("resize")), 305);
+      } else {
+        appContainer.classList.toggle("sidebar-active");
+      }
+    });
+
+    sidebarOverlayEl.addEventListener("click", () => {
+      appContainer.classList.remove("sidebar-active");
+    });
+
+    document.getElementById("exportCsv").addEventListener("click", exportToCsv);
+    document.getElementById("exportExcel").addEventListener("click", exportToExcel);
+
     window.addEventListener("resize", () => {
       if (!document.getElementById("dashboardApp").classList.contains("is-locked")) render();
     });
